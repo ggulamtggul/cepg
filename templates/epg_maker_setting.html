@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+
+{{ macros.m_button_group([['globalSettingSaveBtn', '설정 저장'], ['globalOneExecuteBtn', '1회 실행'], ['globalImmediatelyExecuteBtn', '즉시 실행']])}}
+{{ macros.m_row_start('5') }}
+{{ macros.m_row_end() }}
+
+<nav>  
+  {{ macros.m_tab_head_start() }}
+    {{ macros.m_tab_head('normal', '설정', true) }}
+    {{ macros.m_tab_head('auto', '자동 & 기타', false) }}
+  {{ macros.m_tab_head_end() }}
+</nav> 
+
+<form id='setting' name='setting'>
+  <div class="tab-content" id="nav-tabContent">
+    <!-- 일반 -->
+    {{ macros.m_tab_content_start('normal', true) }}
+      {{ macros.setting_buttons([['sheet_all_btn', '전체'], ['sheet_daum_btn', 'Daum'], ['sheet_wavve_btn', '웨이브'],['sheet_tving_btn', '티빙'], ['sheet_skb_btn', 'SKB'], ['sheet_kt_btn', 'KT'], ['sheet_lgu_btn', 'LGU'], ['sheet_hcn_btn', 'HCN'], ['sheet_cmb_btn', 'CMB'], ['sheet_kctv_btn', 'KCTV'], ['sheet_kt_logo_btn', 'KT 로고'], ['sheet_last_logo_btn', '최종 로고'],], left='시트 작업' ) }}
+    {{ macros.m_tab_content_end() }}
+
+    {{ macros.m_tab_content_start('auto', false) }}
+      {{ macros.global_setting_scheduler_button(arg['scheduler'], arg['is_running']) }}
+      {{ macros.setting_input_text('maker_interval', '스케쥴링 실행 정보', value=arg['maker_interval'], col='3', desc=['Inverval(minute 단위)이나 Cron 설정']) }}
+      {{ macros.setting_checkbox('maker_auto_start', '시작시 자동실행', value=arg['maker_auto_start'], desc='On : 시작시 자동으로 스케쥴러에 등록됩니다.') }}
+    {{ macros.m_tab_content_end() }}
+  </div><!--tab-content-->
+</form>
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+});
+
+
+
+$("body").on('click', '#sheet_all_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'all');
+});
+
+$("body").on('click', '#sheet_daum_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'daum');
+});
+
+$("body").on('click', '#sheet_wavve_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'wavve');
+});
+
+$("body").on('click', '#sheet_tving_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'tving');
+});
+
+$("body").on('click', '#sheet_skb_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'skb');
+});
+
+$("body").on('click', '#sheet_kt_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'kt');
+});
+
+$("body").on('click', '#sheet_lgu_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'lgu');
+});
+
+$("body").on('click', '#sheet_hcn_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'hcn');
+});
+
+$("body").on('click', '#sheet_cmb_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'cmb');
+});
+
+$("body").on('click', '#sheet_kctv_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'kctv');
+});
+
+$("body").on('click', '#sheet_kt_logo_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'kt_logo');
+});
+
+$("body").on('click', '#sheet_last_logo_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('sheet', 'last_logo');
+});
+
+
+</script>    
+{% endblock %}

@@ -1,0 +1,6 @@
+title: "EPG"
+version: "1.0.0"
+package_name: "epg"
+developer: "flaskfarm"
+description: "EPG 생성"
+home: "https://github.com/flaskfarm/epg"

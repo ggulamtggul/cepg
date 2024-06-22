@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+
+{{ macros.m_button_group([['globalSettingSaveBtn', '설정 저장'], ['globalOneExecuteBtn', '1회 실행'], ['globalImmediatelyExecuteBtn', '즉시 실행']])}}
+{{ macros.m_row_start('5') }}
+{{ macros.m_row_end() }}
+
+<nav>  
+  {{ macros.m_tab_head_start() }}
+    {{ macros.m_tab_head('normal', '설정', true) }}
+    {{ macros.m_tab_head('auto', '자동 & 기타', false) }}
+  {{ macros.m_tab_head_end() }}
+</nav> 
+
+<form id='setting' name='setting'>
+  <div class="tab-content" id="nav-tabContent">
+    {{ macros.m_tab_content_start('normal', true) }}
+      {{ macros.info_text_go('alive', 'EPG for ALive', value=arg['alive']) }}
+      {{ macros.info_text_and_buttons('xml_updated_klive', '', [['make_alive_btn', '다시 만들기']], value='만든 시간 : ' + arg['xml_updated_alive'], desc=None) }}
+      {{ macros.info_text_go('tvheadend', 'EPG for Tvheadend', value=arg['tvheadend']) }}
+      {{ macros.info_text_and_buttons('xml_updated_tvheadend', '', [['make_tvheadend_btn', '다시 만들기']], value='만든 시간 : ' + arg['xml_updated_tvheadend'], desc=None) }}
+      {{ macros.info_text_go('hdhomerun', 'EPG for HDHomerun', value=arg['hdhomerun']) }}
+      {{ macros.info_text_and_buttons('xml_updated_hdhomerun', '', [['make_hdhomerun_btn', '다시 만들기']], value='만든 시간 : ' + arg['xml_updated_hdhomerun'], desc=None) }}
+      {{ macros.info_text_go('all', 'EPG for ALL', value=arg['all']) }}
+    {{ macros.m_tab_content_end() }}
+
+    {{ macros.m_tab_content_start('auto', false) }}
+      {{ macros.global_setting_scheduler_button(arg['scheduler'], arg['is_running']) }}
+      {{ macros.setting_input_text('xml_interval', '스케쥴링 실행 정보', value=arg['xml_interval'], col='3', desc=['Inverval(minute 단위)이나 Cron 설정']) }}
+      {{ macros.setting_checkbox('xml_auto_start', '시작시 자동실행', value=arg['xml_auto_start'], desc=['On : 시작시 자동으로 스케쥴러에 등록됩니다.', 'EPG 스케쥴러는 자동으로 최신의 EPG를 가져온 후 EPG 파일을 만들어줍니다.']) }}
+    {{ macros.m_tab_content_end() }}
+  </div><!--tab-content-->
+</form>
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+});
+
+$("body").on('click', '#make_klive_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('make', 'klive');
+});
+
+$("body").on('click', '#make_tvheadend_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('make', 'tvheadend');
+});
+
+$("body").on('click', '#make_hdhomerun_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('make', 'hdhomerun');
+});
+
+$("body").on('click', '#epg_time_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('epg_time');
+});
+
+$("body").on('click', '#celery_epg_time_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('celery_epg_time');
+});
+
+
+</script>    
+{% endblock %}
