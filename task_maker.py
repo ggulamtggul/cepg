@@ -58,7 +58,7 @@ class Task(object):
             make_count = 0
             
             channel_list = ModelEpgChannel.get_list() 
-            channel_list = []
+            #channel_list = []
             for index, channel in enumerate(channel_list):
                 logger.info(f">>>> {index} / {len(channel_list)} : {channel.name} UPDATED TIME:[{channel.update_time}]")
                 if channel.epg_from in ['spotv', 'tving']:
