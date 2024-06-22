@@ -1,17 +1,21 @@
+from flask import send_file
+
 from .setup import *
 from .task_xml import Task
 
 
 class ModuleXml(PluginModuleBase):
     def __init__(self, P):
-        super(ModuleXml, self).__init__(P, name='xml', first_menu='setting')
+        super(ModuleXml, self).__init__(P, name='xml', first_menu='setting', scheduler_desc="EPG 생성")
         self.db_default = {
             f'{self.name}_db_version' : '1',
             f'{self.name}_auto_start' : 'False',
             f'{self.name}_interval' : '30 0/12 * * *',
             f'{self.name}_updated_tvheadend' : '',
             f'{self.name}_updated_alive' : '',
+            f'{self.name}_updated_alive_all' : '',
             f'{self.name}_updated_hdhomerun' : '',
+            f'{self.name}_data_updated_time' : '',
         }
 
     def process_menu(self, page, req):
@@ -19,7 +23,7 @@ class ModuleXml(PluginModuleBase):
             arg = P.ModelSetting.to_dict()
             arg['sub'] = self.name
             if page == 'setting':
-                for tmp in ['tvheadend', 'alive', 'hdhomerun', 'all']:
+                for tmp in ['tvheadend', 'alive', 'hdhomerun', 'alive_all']:
                     arg[tmp] = ToolUtil.make_apikey_url(f'/{P.package_name}/api/{self.name}/{tmp}')
             return render_template(f'{self.P.package_name}_{self.name}_{page}.html', arg=arg)
         except Exception as e:
@@ -63,6 +67,7 @@ class ModuleXml(PluginModuleBase):
 
     def scheduler_function(self):
         self.task_interface('alive', 'scheduler').join()
+        self.task_interface('alive_all', 'scheduler').join()
         self.task_interface('hdhomerun', 'scheduler').join()
         self.task_interface('tvheadend', 'scheduler').join()
 
@@ -85,19 +90,19 @@ class ModuleXml(PluginModuleBase):
         need_make = 0
         plugin = args[0]
         mode = args[1]
-        Task.git_pull()
+        updated_time = Task.get_updated_time()
         if mode == 'manual':
             need_make = 1
         output_filepath = Task.get_output_filepath(plugin)
         if need_make == 0 and os.path.exists(output_filepath) == False:
             need_make = 2
         if need_make == 0:
-            time_str = ModelSetting.get(f"user_updated_{plugin}")
+            time_str = P.ModelSetting.get(f"user_updated_{plugin}")
             if time_str == '':
                 need_make = 3
             else:
                 update_dt = datetime.strptime(time_str, '%Y-%m-%d %H:%M:%S')
-                epg_dt = datetime.strptime(P.ModelSettingDATA.get('updated_time'), '%Y-%m-%d %H:%M:%S')
+                epg_dt = datetime.strptime(updated_time, '%Y-%m-%d %H:%M:%S')
                 logger.info(f"update_dt : {update_dt}")
                 logger.info(f"epg_dt : {epg_dt}")
                 if update_dt < epg_dt:
@@ -114,3 +119,5 @@ class ModuleXml(PluginModuleBase):
         th.start()
         return th
         
+
+    

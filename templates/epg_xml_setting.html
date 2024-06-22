@@ -16,16 +16,18 @@
   <div class="tab-content" id="nav-tabContent">
     {{ macros.m_tab_content_start('normal', true) }}
       {{ macros.info_text_go('alive', 'EPG for ALive', value=arg['alive']) }}
-      {{ macros.info_text_and_buttons('xml_updated_klive', '', [['make_alive_btn', '다시 만들기']], value='만든 시간 : ' + arg['xml_updated_alive'], desc=None) }}
+      {{ macros.info_text_and_buttons('xml_updated_alive', '', [['make_alive_btn', '다시 만들기']], value='만든 시간 : ' + arg['xml_updated_alive'], desc=None) }}
+      {{ macros.info_text_go('alive_all', 'EPG for ALive All', value=arg['alive_all']) }}
+      {{ macros.info_text_and_buttons('xml_updated_alive_all', '', [['make_alive_all_btn', '다시 만들기']], value='만든 시간 : ' + arg['xml_updated_alive_all'], desc=None) }}
       {{ macros.info_text_go('tvheadend', 'EPG for Tvheadend', value=arg['tvheadend']) }}
       {{ macros.info_text_and_buttons('xml_updated_tvheadend', '', [['make_tvheadend_btn', '다시 만들기']], value='만든 시간 : ' + arg['xml_updated_tvheadend'], desc=None) }}
       {{ macros.info_text_go('hdhomerun', 'EPG for HDHomerun', value=arg['hdhomerun']) }}
       {{ macros.info_text_and_buttons('xml_updated_hdhomerun', '', [['make_hdhomerun_btn', '다시 만들기']], value='만든 시간 : ' + arg['xml_updated_hdhomerun'], desc=None) }}
-      {{ macros.info_text_go('all', 'EPG for ALL', value=arg['all']) }}
+      {{ macros.info_text_go('all', 'EPG for ALL', value="https://raw.githubusercontent.com/flaskfarm/.epg.db/main/xmltv.xml") }}
     {{ macros.m_tab_content_end() }}
 
     {{ macros.m_tab_content_start('auto', false) }}
-      {{ macros.global_setting_scheduler_button(arg['scheduler'], arg['is_running']) }}
+      {{ macros.global_setting_scheduler_button(arg['is_include'], arg['is_running']) }}
       {{ macros.setting_input_text('xml_interval', '스케쥴링 실행 정보', value=arg['xml_interval'], col='3', desc=['Inverval(minute 단위)이나 Cron 설정']) }}
       {{ macros.setting_checkbox('xml_auto_start', '시작시 자동실행', value=arg['xml_auto_start'], desc=['On : 시작시 자동으로 스케쥴러에 등록됩니다.', 'EPG 스케쥴러는 자동으로 최신의 EPG를 가져온 후 EPG 파일을 만들어줍니다.']) }}
     {{ macros.m_tab_content_end() }}
@@ -37,9 +39,14 @@
 $(document).ready(function(){
 });
 
-$("body").on('click', '#make_klive_btn', function(e){
+$("body").on('click', '#make_alive_btn', function(e){
   e.preventDefault();
-  globalSendCommand('make', 'klive');
+  globalSendCommand('make', 'alive');
+});
+
+$("body").on('click', '#make_alive_all_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('make', 'alive_all');
 });
 
 $("body").on('click', '#make_tvheadend_btn', function(e){

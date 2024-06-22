@@ -1,22 +1,50 @@
+import urllib
+
+import requests
 from lxml import etree as ET
+from support import default_headers
 
 from .setup import *
 
 
 class Task(object):
     @staticmethod
-    @celery.task
     def updated_time():
         return P.ModelSettingDATA.get('updated_time')
 
+    @staticmethod
+    def get_updated_time():
+        url = 'https://raw.githubusercontent.com/flaskfarm/.epg.db/main/UPDATED_TIME'
+        return requests.get(url, headers=default_headers).text
 
     @staticmethod 
     def get_output_filepath(plugin):
         if plugin == 'all':
-            filename = os.path.join(os.path.dirname(__file__), 'files', f'xmltv_{plugin}.xml')
+            filename = os.path.join(os.path.dirname(__file__), 'files', f'xmltv.xml')
         else:
-            filename = os.path.join(F.config['path_data'], 'output', f'xmltv_{plugin}.xml')
+            filename = os.path.join(F.config['path_data'], 'xmltv', f'xmltv_{plugin}.xml')
         return filename
+
+
+    @staticmethod 
+    def update_epg_data_db():
+        try:
+            time1 = P.ModelSetting.get('epg_data_updated_time')
+            time2 = Task.get_updated_time()
+            if time1 == None or time1 != time2:
+                data_db_file = os.path.join(os.path.dirname(__file__), 'files', 'epg_data.db')
+                if os.path.exists(data_db_file):
+                    os.remove(data_db_file)
+                
+                logger.info(f"{time1} {time2} epg_data.db 다운로드")
+                urllib.request.urlretrieve("https://github.com/flaskfarm/.epg.db/raw/main/epg_data.db", data_db_file) 
+                P.ModelSetting.set('epg_data_updated_time', time2)
+            else:
+                logger.info(f"{time1} {time2} epg_data.db 다운로드 필요없음")
+        except Exception as e: 
+                logger.error(f'Exception:{str(e)}')
+                logger.error(traceback.format_exc())
+
 
     @staticmethod
     @celery.task
@@ -30,25 +58,29 @@ class Task(object):
         if plugin == 'alive':
             try:
                 import alive
-                Task.make_xml('alive')
+                with F.app.app_context():
+                    Task.make_xml('alive')
             except Exception as e: 
                 logger.error('alive not installed')
         elif plugin == 'hdhomerun':
             try:
                 import hdhomerun
-                Task.make_xml('hdhomerun')
+                with F.app.app_context():
+                    Task.make_xml('hdhomerun')
             except Exception as e: 
                 logger.error('hdhomerun not installed')
         elif plugin == 'tvheadend':
             try:
                 import tvheadend
-                Task.make_xml('tvheadend')
+                with F.app.app_context():
+                    Task.make_xml('tvheadend')
             except Exception as e: 
                 logger.error('tvheadend not installed')
         logger.debug(f'EPG {plugin} epg make start..')
 
     @staticmethod
     def make_xml(call_from):
+        Task.update_epg_data_db()
         logger.warning(f"make_xml_task : {call_from}")
         if call_from == 'tvheadend':
             try:
@@ -89,53 +121,9 @@ class Task(object):
                 return traceback.format_exc()
 
         elif call_from == 'alive':
-            try:
-                import alive
-                query = db.session.query(alive.ModelCustom)
-                query = query.order_by(alive.ModelCustom.number)
-                query = query.order_by(alive.ModelCustom.epg_id)
-                klive_channel_list = query.all()
-                root = ET.Element('tv')
-                root.set('generator-info-name', F.SystemModelSetting.get('ddns'))
-                
-                for klive_channel in klive_channel_list:
-                    epg_entity = ModelEpgChannel.get_by_name(klive_channel.epg_name)
-                    if epg_entity is None:
-                        # 2020-06-14
-                        epg_entity = ModelEpgChannel.get_by_prefer(klive_channel.title)
-                        #tmp = ModelEpgMakerChannel.get_match_name(klive_channel.epg_name)
-                        #if tmp is not None :
-                        #    epg_entity = ModelEpgMakerChannel.get_instance_by_name(tmp[0])
-                    #if epg_entity is None:
-                    #    logger.debug('no channel_instance :%s', klive_channel.title)
-                    #    #continue
-                    #    # 2020-06-08
-                    #    # Plex dvr같은 경우 내용은 없어도 채널태그는 있어야함.
-                    channel_tag = ET.SubElement(root, 'channel') 
-                    channel_tag.set('id', '%s|%s' % (klive_channel.source, klive_channel.source_id))
-                    if epg_entity is not None:
-                        icon_tag = ET.SubElement(channel_tag, 'icon')
-                        icon_tag.set('src', epg_entity.icon)
-                    display_name_tag = ET.SubElement(channel_tag, 'display-name') 
-                    display_name_tag.text = klive_channel.title
-                    display_name_tag = ET.SubElement(channel_tag, 'display-name') 
-                    display_name_tag.text = str(klive_channel.number)
-                    display_name_tag = ET.SubElement(channel_tag, 'display-number') 
-                    display_name_tag.text = str(klive_channel.number)
-
-                for klive_channel in klive_channel_list:
-                    epg_entity = ModelEpgChannel.get_by_name(klive_channel.epg_name)
-                    if epg_entity is None:
-                        epg_entity = ModelEpgChannel.get_by_prefer(klive_channel.title)
-                    if epg_entity is None:
-                        logger.debug('no channel_instance :%s', klive_channel.title)
-                        continue
-                                     
-                    Task.make_channel(root, epg_entity, '%s|%s' % (klive_channel.source, klive_channel.source_id), category=klive_channel.group)
-            except Exception as e: 
-                logger.error(f'Exception:{str(e)}')
-                logger.error(traceback.format_exc())
-                return traceback.format_exc()
+            root = Task.process_alive()
+        elif call_from == 'alive_all':
+            root = Task.process_alive(is_all=True)
 
         elif call_from == 'hdhomerun':
             try:
@@ -211,15 +199,78 @@ class Task(object):
                 os.remove(filename)
             tree.write(filename, pretty_print=True, xml_declaration=True, encoding="utf-8")
             #ret = ET.tostring(root, pretty_print=True, xml_declaration=True, encoding="utf-8")
-            P.ModelSetting.set(f'user_updated_{call_from}', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            P.ModelSetting.set(f'xml_updated_{call_from}', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             #db.session.commit()
-            logger.debug('EPG2XML end....')
+            logger.info('EPG2XML end....')
             return True
         except Exception as e: 
             logger.error(f'Exception:{str(e)}')
             logger.error(traceback.format_exc())
 
-   
+    
+    @staticmethod
+    def process_alive(is_all=False):
+        regex1 = r'tvg-id="(?P<name>[^"]*?)"\stvg-name="([^"]*?)"\stvg-logo="(?P<logo>[^"]*?)"\sgroup-title="(?P<group>[^"]*?)"\s(radio="true"\s)?tvg-chno="(?P<no>[^"]*?)"\stvh-chnum="([^"]*?)",([^$]*?)$'
+
+        try:
+            import alive
+            from alive.logic_alive import LogicAlive
+
+            #PP = F.PluginManager.get_plugin_instance('alive')
+            #m3u = PP.module_list[0].process_m3u('m3u' if normal else 'm3uall', {})
+            if is_all == False:
+                m3u = LogicAlive.get_m3u()
+            else:
+                m3u = LogicAlive.get_m3uall()
+            alive_channel_list = []   
+            for ch in re.finditer(regex1, m3u, re.MULTILINE):
+                alive_channel_list.append({
+                    'cate': ch.group('group'),
+                    'name': ch.group('name'),
+                    'number': ch.group('no'),
+                })
+            root = ET.Element('tv')
+            root.set('generator-info-name', F.SystemModelSetting.get('ddns'))
+            for idx, alive_channel in enumerate(alive_channel_list):
+                epg_entity = ModelEpgChannel.get_by_name(alive_channel['name'])
+                if epg_entity is None:
+                    # 2020-06-14
+                    epg_entity = ModelEpgChannel.get_by_prefer(alive_channel['name'])
+                if epg_entity:
+                    logger.debug(f"{idx+1} / {len(alive_channel_list)} ALive - {alive_channel['name']} / DB - {epg_entity.name} ")
+                else:
+                    logger.info(f"{idx+1} / {len(alive_channel_list)}  ALive - {alive_channel['name']} / DB 없음.")
+                channel_tag = ET.SubElement(root, 'channel') 
+                #channel_tag.set('id', '%s|%s' % (alive_channel.source, alive_channel.source_id))
+                channel_tag.set('id', alive_channel['name'])
+                if epg_entity is not None:
+                    icon_tag = ET.SubElement(channel_tag, 'icon')
+                    icon_tag.set('src', epg_entity.icon)
+                display_name_tag = ET.SubElement(channel_tag, 'display-name') 
+                display_name_tag.text = alive_channel['name']
+                display_name_tag = ET.SubElement(channel_tag, 'display-name') 
+                display_name_tag.text = alive_channel['number']
+                display_name_tag = ET.SubElement(channel_tag, 'display-number') 
+                display_name_tag.text = alive_channel['number']
+
+            for idx, alive_channel in enumerate(alive_channel_list):
+                epg_entity = ModelEpgChannel.get_by_name(alive_channel['name'])
+                if epg_entity is None:
+                    epg_entity = ModelEpgChannel.get_by_prefer(alive_channel['name'])
+                if epg_entity is None:
+                    logger.debug('no channel_instance :%s', alive_channel['name'])
+                    continue
+                                    
+                #Task.make_channel(root, epg_entity, '%s|%s' % (alive_channel.source, alive_channel.source_id), category=alive_channel.group)
+                Task.make_channel(root, epg_entity, alive_channel['name'], category=alive_channel['cate'])
+            return root
+        except Exception as e: 
+            logger.error(f'Exception:{str(e)}')
+            logger.error(traceback.format_exc())
+            return traceback.format_exc()
+        
+
+
     @staticmethod
     def make_channel(root, channel_instance, channel_id, category=None):
         try:
@@ -306,17 +357,3 @@ class Task(object):
             logger.error(f'Exception:{str(e)}')
             logger.error(traceback.format_exc())
 
-
-    @staticmethod
-    def git_pull():
-        try:
-            if platform.system() == 'Windows':
-                epg_sh = os.path.join(os.path.dirname(__file__), 'file', 'epg_pull.bat')
-                os.system(f"{epg_sh} {os.path.dirname(__file__)}")
-            else:
-                epg_sh = os.path.join(os.path.dirname(__file__), 'file', 'epg_pull.sh')
-                os.system(f"chmod 777 {os.path.dirname(__file__)}")
-                os.system(f"{epg_sh} {os.path.dirname(__file__)}")
-        except Exception as e: 
-            logger.error(f'Exception:{str(e)}')
-            logger.error(traceback.format_exc())

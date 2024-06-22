@@ -4,7 +4,7 @@ from .task_maker import Task
 
 class ModuleMaker(PluginModuleBase):
     def __init__(self, P):
-        super(ModuleMaker, self).__init__(P, name='maker', first_menu='setting')
+        super(ModuleMaker, self).__init__(P, name='maker', first_menu='setting', scheduler_desc="epg_data.db 생성")
         self.db_default = {
             f'{self.name}_db_version' : '1',
             f'{self.name}_auto_start' : 'False',
@@ -38,9 +38,6 @@ class ModuleMaker(PluginModuleBase):
             else:
                 ret = Task.start()
         
-        data_db_default = {
-            'updated_time' : ''
-        }
         if P.ModelSettingDATA.get('updated_time') == None:
             P.ModelSettingDATA.set('updated_time', '')
 

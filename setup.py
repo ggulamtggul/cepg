@@ -69,6 +69,7 @@ try:
    
     if os.path.exists(os.path.join(os.path.dirname(__file__), 'files', 'credential.json')) == False:
         P.set_module_list([ModuleXml])
+        del P.menu['list'][1]
     else:
         from .mod_maker import ModuleMaker
         P.set_module_list([ModuleXml, ModuleMaker])
