@@ -99,7 +99,7 @@ class ModuleXml(PluginModuleBase):
         if need_make == 0 and os.path.exists(output_filepath) == False:
             need_make = 2
         if need_make == 0:
-            time_str = P.ModelSetting.get(f"user_updated_{plugin}")
+            time_str = P.ModelSetting.get(f"{self.name}_updated_{plugin}")
             if time_str == '' or time_str == None:
                 need_make = 3
             else:
