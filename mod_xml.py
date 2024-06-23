@@ -22,6 +22,8 @@ class ModuleXml(PluginModuleBase):
         try:
             arg = P.ModelSetting.to_dict()
             arg['sub'] = self.name
+            arg['is_include'] = F.scheduler.is_include(self.get_scheduler_name())
+            arg['is_running'] = F.scheduler.is_running(self.get_scheduler_name())
             if page == 'setting':
                 for tmp in ['tvheadend', 'alive', 'hdhomerun', 'alive_all']:
                     arg[tmp] = ToolUtil.make_apikey_url(f'/{P.package_name}/api/{self.name}/{tmp}')
