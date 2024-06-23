@@ -63,7 +63,7 @@ class ModelEpgContent(ModelBase):
                 else:
                     from support_site import SiteDaumTv
                     ret = SiteDaumTv.info(code, title)
-                    if ret['ret'] == 'success':
+                    if ret['ret'] != 'success':
                         return code
                     data = ret['data']
                     posters = sorted(data['thumb'], key=lambda k: k['score'], reverse=True) 
