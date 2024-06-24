@@ -14,8 +14,9 @@ class EpgWavve(object):
                 end_dt = current_dt + timedelta(days=6)
                 end_param = end_dt.strftime('%Y-%m-%d') + ' 24:00'
                 data = SupportWavve.live_epgs_channels(channel.wavve_id, start_param, end_param)
-                if data['list'] == False:
-                    logger.debug(data['list'])
+                if data == None or data['list'] == False:
+                    logger.warning(f"wavve EPG 데이터 실패: {channel.name}")
+                    return False
                     
                 for item in data['list']:
                     p = ModelEpgProgram()

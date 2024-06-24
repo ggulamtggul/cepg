@@ -45,6 +45,7 @@ class EpgSpotv(object):
                         count += 1
                     db_item.update_time = current_dt
                     db_item.epg_from = 'spotv'
+                    #db_item.save()
                     db.session.add(db_item)
                     logger.warning(f"{db_item.name} {count}개 추가")
                 db.session.commit()

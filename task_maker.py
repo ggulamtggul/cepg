@@ -27,6 +27,7 @@ class Task(object):
         with F.app.app_context():
             Task.make_channel_list(sheet)
 
+        with F.app.app_context():
             # spotv 
             db_item = ModelEpgChannel.get_by_name('SPOTV')
             if Task.is_need_epg_make(db_item):
@@ -71,7 +72,10 @@ class Task(object):
                 try:
                     make_title.append(channel.name)
                     ModelEpgProgram.delete_by_channel_name(channel.name)
-                    
+                except Exception as e: 
+                    logger.error(f'Exception:{str(e)}')
+                    logger.error(traceback.format_exc())
+                try:    
                     for epg_source in epg_map:
                         ret = getattr(channel, f"{epg_source['name']}_id")
                         if ret == '':

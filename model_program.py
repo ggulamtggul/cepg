@@ -53,6 +53,7 @@ class ModelEpgProgram(ModelBase):
 
     @classmethod
     def delete_by_channel_name(cls, channel_name):
+        with F.app.app_context():
             db.session.query(cls).filter(cls.channel_name == channel_name).delete()
             db.session.commit()
 
