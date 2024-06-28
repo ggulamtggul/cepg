@@ -135,6 +135,7 @@ class Task(object):
 
 
     @staticmethod
+    @celery.task
     def upload():
         try:
             import platform

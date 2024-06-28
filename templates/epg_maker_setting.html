@@ -17,6 +17,9 @@
     <!-- 일반 -->
     {{ macros.m_tab_content_start('normal', true) }}
       {{ macros.setting_buttons([['sheet_all_btn', '전체'], ['sheet_daum_btn', 'Daum'], ['sheet_wavve_btn', '웨이브'],['sheet_tving_btn', '티빙'], ['sheet_skb_btn', 'SKB'], ['sheet_kt_btn', 'KT'], ['sheet_lgu_btn', 'LGU'], ['sheet_hcn_btn', 'HCN'], ['sheet_cmb_btn', 'CMB'], ['sheet_kctv_btn', 'KCTV'], ['sheet_kt_logo_btn', 'KT 로고'], ['sheet_last_logo_btn', '최종 로고'],], left='시트 작업' ) }}
+
+      {{ macros.setting_buttons([['git_upload_btn', 'GIT UPLOAD']], left='GIT' ) }}
+
     {{ macros.m_tab_content_end() }}
 
     {{ macros.m_tab_content_start('auto', false) }}
@@ -32,6 +35,11 @@
 $(document).ready(function(){
 });
 
+
+$("body").on('click', '#git_upload_btn', function(e){
+  e.preventDefault();
+  globalSendCommand('git_upload');
+});
 
 
 $("body").on('click', '#sheet_all_btn', function(e){

@@ -13,13 +13,27 @@ class ModuleMaker(PluginModuleBase):
     
     def process_command(self, command, arg1, arg2, arg3, req):
         try:
-            ret = {}
+            ret = {'ret':'success'}
             if command == 'sheet':
                 ins = CliMakeSheet()
                 arg1 = req.form['arg1']
                 method_to_call = getattr(ins, arg1)
                 result = method_to_call()
                 logger.debug("종료")
+            elif command == 'git_upload':
+                def func():
+                    func = Task.start
+                    time.sleep(1)
+                    if F.config['use_celery']:
+                        result = Task.upload.apply_async()
+                        ret = result.get()
+                    else:
+                        ret = Task.upload()
+                th = threading.Thread(target=func, args=())
+                th.setDaemon(True)
+                th.start()
+                th.join()
+                ret['msg'] = '명령전달'
 
             return jsonify(ret)
         except Exception as e: 
