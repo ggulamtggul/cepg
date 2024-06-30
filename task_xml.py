@@ -38,6 +38,7 @@ class Task(object):
                 
                 logger.info(f"{time1} {time2} epg_data.db 다운로드")
                 urllib.request.urlretrieve("https://github.com/flaskfarm/.epg.db/raw/main/epg_data.db", data_db_file) 
+                logger.info(f"{time1} {time2} epg_data.db 다운로드 완료")
                 P.ModelSetting.set('epg_data_updated_time', time2)
             else:
                 logger.info(f"{time1} {time2} epg_data.db 다운로드 필요없음")
@@ -55,11 +56,11 @@ class Task(object):
         plugin = args[0]
         mode = args[1]
         
-        if plugin == 'alive':
+        if plugin.startswith('alive'):
             try:
                 import alive
                 with F.app.app_context():
-                    Task.make_xml('alive')
+                    Task.make_xml(plugin)
             except Exception as e: 
                 logger.error('alive not installed')
         elif plugin == 'hdhomerun':
@@ -127,8 +128,9 @@ class Task(object):
 
         elif call_from == 'hdhomerun':
             try:
-                import hdhomerun as hdhomerun
-                channel_list = hdhomerun.LogicHDHomerun.channel_list(only_use=True)
+                import hdhomerun
+                from hdhomerun.model import ModelHDHomerunChannel
+                channel_list = ModelHDHomerunChannel.channel_list(only_use=True)
 
                 root = ET.Element('tv')
                 root.set('generator-info-name', F.SystemModelSetting.get('ddns'))
@@ -214,14 +216,14 @@ class Task(object):
 
         try:
             import alive
-            from alive.logic_alive import LogicAlive
+            from alive.logic_alive import LogicAlive, LogicKlive
 
             #PP = F.PluginManager.get_plugin_instance('alive')
             #m3u = PP.module_list[0].process_m3u('m3u' if normal else 'm3uall', {})
             if is_all == False:
                 m3u = LogicAlive.get_m3u()
             else:
-                m3u = LogicAlive.get_m3uall()
+                m3u = LogicKlive.get_m3uall()
             alive_channel_list = []   
             for ch in re.finditer(regex1, m3u, re.MULTILINE):
                 alive_channel_list.append({

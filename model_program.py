@@ -57,3 +57,14 @@ class ModelEpgProgram(ModelBase):
             db.session.query(cls).filter(cls.channel_name == channel_name).delete()
             db.session.commit()
 
+
+    @classmethod
+    def get_program(cls, channel_name, current_time=None):
+        if current_time == None:
+            current_time = datetime.now()
+
+        with F.app.app_context():
+            item = db.session.query(cls).filter(cls.channel_name == channel_name).filter(cls.start_time < current_time).filter(cls.end_time > current_time).first()
+            if item:
+                return item.title
+            
