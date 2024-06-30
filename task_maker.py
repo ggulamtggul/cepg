@@ -46,8 +46,8 @@ class Task(object):
 
             
             epg_map = [
-                {'name':'wavve', 'ins': EpgWavve, 'count':0},
                 {'name':'daum', 'ins' : EpgDaum, 'count':0},
+                {'name':'wavve', 'ins': EpgWavve, 'count':0},
                 #{"name" : 'hcn', 'ins' : EpgHcn, 'count':0}, 
                 #{"name" : 'lgu', 'ins' : EpgLgu, 'count':0}, 
                 #{"name" : 'skb', 'ins' : EpgSkb, 'count':0}, 

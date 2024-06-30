@@ -32,6 +32,7 @@ class EpgWavve(object):
                     p.is_movie = False
                     #p.poster = 'https://' + item['channelimage']
                     db.session.add(p)
+                logger.info(f"EPG 웨이브 {channel.name} {len(data['list'])} 저장")
                 return True
         except Exception as e: 
             logger.error(f'Exception:{str(e)}')
