@@ -696,6 +696,9 @@ class CliMakeSheet:
 class EPG_Sheet(GoogleSheetBase):
     def __init__(self):
         super(EPG_Sheet, self).__init__('17Uq1cOokrZ4Ci0eQxs5_v6Ea8jKx3IPgTR1JudLR6tM', os.path.join(os.path.dirname(os.path.dirname(__file__)), 'files', 'credential.json'), 0, '이름')
+        # 원본 17Uq1cOokrZ4Ci0eQxs5_v6Ea8jKx3IPgTR1JudLR6tM
+        # 테스트용: 1jLE8xDmrxhcMLmXuD1ShCFIK63-DorCg-KOe1PjBPZc
+
 
 
 if __name__ == '__main__':

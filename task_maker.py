@@ -25,26 +25,31 @@ class Task(object):
         from .site.cli_make_sheet import EPG_Sheet
         sheet = EPG_Sheet()
         with F.app.app_context():
+            logger.debug("EPG MAKER start..")
             Task.make_channel_list(sheet)
+            logger.debug("EPG MAKER channel list created.")
 
         with F.app.app_context():
             # spotv 
+            logger.info("스포티비 EPG 생성 시작")
             db_item = ModelEpgChannel.get_by_name('SPOTV')
-            if Task.is_need_epg_make(db_item):
-                logger.info("스포티비 EPG 생성")
-                EpgSpotv.make_epg()
-            else:
-                logger.debug('스포티비 1일 미만이라 패스 : %s', (datetime.now()-db_item.update_time))
+            if db_item:
+                if Task.is_need_epg_make(db_item):
+                    logger.info("스포티비 EPG 생성")
+                    EpgSpotv.make_epg()
+                else:
+                    logger.debug('스포티비 1일 미만이라 패스 : %s', (datetime.now()-db_item.update_time))
 
             # tving 
+            logger.info("티빙 EPG 생성 시작")
             db_item = ModelEpgChannel.get_by_name('tvN')
-            if Task.is_need_epg_make(db_item):
-                logger.info("티빙 EPG 생성")
-                EpgTving.make_epg()
-            else:
-                logger.debug('티빙-tvN 1일 미만이라 패스 : %s', (datetime.now()-db_item.update_time))
+            if db_item:
+                if db_item and Task.is_need_epg_make(db_item):
+                    logger.info("티빙 EPG 생성")
+                    EpgTving.make_epg()
+                else:
+                    logger.debug('티빙-tvN 1일 미만이라 패스 : %s', (datetime.now()-db_item.update_time))
 
-            
             epg_map = [
                 {'name':'daum', 'ins' : EpgDaum, 'count':0},
                 {'name':'wavve', 'ins': EpgWavve, 'count':0},
@@ -174,6 +179,7 @@ class Task(object):
 
     @staticmethod
     def is_need_epg_make(db_item):
+        #return True
         #if db_item.update_time + timedelta(days=1) > datetime.now():
         if db_item.update_time == None or db_item.update_time + timedelta(hours=12) < datetime.now():
             return True
