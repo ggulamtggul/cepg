@@ -183,6 +183,8 @@ class Task(object):
         #if db_item.update_time + timedelta(days=1) > datetime.now():
         if db_item.update_time == None or db_item.update_time + timedelta(hours=12) < datetime.now():
             return True
+        if P.ModelSetting.get('maker_force_update'):
+            return True
         return False
 
  

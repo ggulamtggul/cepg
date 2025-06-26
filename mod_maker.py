@@ -9,6 +9,7 @@ class ModuleMaker(PluginModuleBase):
             f'{self.name}_db_version' : '1',
             f'{self.name}_auto_start' : 'False',
             f'{self.name}_interval' : '120',
+            f'{self.name}_force_update' : 'False',
         }
     
     def process_command(self, command, arg1, arg2, arg3, req):
