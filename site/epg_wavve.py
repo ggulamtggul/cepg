@@ -1,5 +1,5 @@
 from ..setup import *
-
+import time
 from urllib.parse import quote
 
 class EpgWavve(object):
@@ -34,7 +34,7 @@ class EpgWavve(object):
                             cls.total_epg_data[channel_data['channelid']] = channel_data['list']
                         else:
                             ch_data.extend(channel_data['list'])
-
+                    time.sleep(1)
             except Exception as e:
                 logger.error(f'Exception:{str(e)}')
                 logger.error(traceback.format_exc())    
@@ -54,7 +54,8 @@ class EpgWavve(object):
                 p.start_time = datetime.strptime(item['starttime'], '%Y-%m-%d %H:%M')
                 p.end_time = datetime.strptime(item['endtime'], '%Y-%m-%d %H:%M')
                 p.title = item['title']
-                p.content_id = ModelEpgContent.append_by_wavve(item['title'])
+                #p.content_id = ModelEpgContent.append_by_wavve(item['title'])
+                P.content_id = None
                 p.episode_number = None
                 p.part_number = None
                 p.rate = None
