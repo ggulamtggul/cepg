@@ -81,91 +81,10 @@ class Task(object):
 
     @staticmethod
     def make_xml(call_from):
-        Task.update_epg_data_db()
+        #
+        #Task.update_epg_data_db()
         logger.warning(f"make_xml_task : {call_from}")
-        if call_from == 'tvheadend':
-            try:
-                import tvheadend
-                tvh_list = tvheadend.LogicNormal.channel_list()
-                if tvh_list is None:
-                    return 'not setting tvheadend'
-                for tvh_ch in tvh_list['lineup']:
-                    epg_entity = ModelEpgChannel.get_by_prefer(tvh_ch['GuideName'])
-                    tvh_ch['channel_instance'] = epg_entity
-            except Exception as e: 
-                logger.error(f'Exception:{str(e)}')
-                logger.error(traceback.format_exc())
-
-            try:
-                generated_on = str(datetime.now())
-                root = ET.Element('tv')
-                root.set('generator-info-name', F.SystemModelSetting.get('ddns'))
-                for tvh in tvh_list['lineup']:
-                    channel_tag = ET.SubElement(root, 'channel') 
-                    channel_tag.set('id', '%s' % tvh['uuid'])
-                    icon_tag = ET.SubElement(channel_tag, 'icon')
-                    if tvh['channel_instance'] != None:
-                        icon_tag.set('src', tvh['channel_instance'].icon)
-                    display_name_tag = ET.SubElement(channel_tag, 'display-name') 
-                    display_name_tag.text = tvh['GuideName']
-                    display_name_tag = ET.SubElement(channel_tag, 'display-name') 
-                    display_name_tag.text = str(tvh['GuideNumber'])
-
-                for tvh in tvh_list['lineup']:
-                    if tvh['channel_instance'] == None:
-                        logger.debug('no channel_instance :%s', tvh)
-                        continue
-                    Task.make_channel(root, tvh['channel_instance'], tvh['uuid'])
-            except Exception as e: 
-                logger.error(f'Exception:{str(e)}')
-                logger.error(traceback.format_exc())
-                return traceback.format_exc()
-
-        elif call_from == 'alive':
-            root = Task.process_alive()
-        elif call_from == 'alive_all':
-            root = Task.process_alive(is_all=True)
-
-        elif call_from == 'hdhomerun':
-            try:
-                import hdhomerun
-                from hdhomerun.model import ModelHDHomerunChannel
-                channel_list = ModelHDHomerunChannel.channel_list(only_use=True)
-
-                root = ET.Element('tv')
-                root.set('generator-info-name', F.SystemModelSetting.get('ddns'))
-                
-                for channel in channel_list:
-                    if channel.match_epg_name == '':
-                        continue
-                    epg_entity = ModelEpgChannel.get_by_name(channel.match_epg_name)
-                    channel_tag = ET.SubElement(root, 'channel') 
-                    channel_tag.set('id', '%s' % channel.id)
-                    
-                    if epg_entity is not None:
-                        icon_tag = ET.SubElement(channel_tag, 'icon')
-                        icon_tag.set('src', epg_entity.icon)
-                    display_name_tag = ET.SubElement(channel_tag, 'display-name') 
-                    display_name_tag.text = channel.scan_name
-                    display_name_tag = ET.SubElement(channel_tag, 'display-name') 
-                    display_name_tag.text = str(channel.ch_number)
-                    display_name_tag = ET.SubElement(channel_tag, 'display-number') 
-                    display_name_tag.text = str(channel.ch_number)
-
-                for channel in channel_list:
-                    epg_entity = ModelEpgChannel.get_by_name(channel.match_epg_name)
-                    if epg_entity is None:
-                        epg_entity = ModelEpgChannel.get_by_prefer(channel.scan_name)
-                    if epg_entity is None:
-                        continue
-                    Task.make_channel(root, epg_entity, '%s' % channel.id)
-                   
-            except Exception as e: 
-                logger.error(f'Exception:{str(e)}')
-                logger.error(traceback.format_exc())
-                return traceback.format_exc()
-        
-        elif call_from == 'all':
+        if call_from == 'all':
             try:
                 channel_list = ModelEpgChannel.get_list()
                 root = ET.Element('tv')

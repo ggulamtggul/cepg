@@ -11,7 +11,7 @@ from .site.epg_skb import EpgSkb
 from .site.epg_spotv import EpgSpotv
 from .site.epg_tving import EpgTving
 from .site.epg_wavve import EpgWavve
-
+import sqlite3
 #       API채널전체 API채널별  방송정보  연령  장르   회차  파트  재방송  
 # lgu : X           X          X        O     O     O    O     O  
 # skb : X           X          X        O     X     O    O     O  
@@ -102,8 +102,21 @@ class Task(object):
                     db.session.add(channel)
                     db.session.commit()
 
-        logger.debug(d(make_title))
-        logger.debug(len(make_title))
+        #logger.debug(d(make_title))
+        #logger.debug(len(make_title))
+        try:
+            conn = sqlite3.connect(EPG_DATA_DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute('VACUUM;')
+            conn.commit()
+            conn.close()
+            logger.info("VACUUM done.")
+            logger.info("VACUUM done.")
+        except Exception as e:
+            logger.error(f'Exception:{str(e)}')
+            logger.error(traceback.format_exc())
+
+
         logger.info(make_count)
         if make_count > -1:
             P.ModelSettingDATA.set('updated_time', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
