@@ -121,7 +121,7 @@ class Task(object):
         if make_count > -1:
             P.ModelSettingDATA.set('updated_time', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             from .task_xml import Task as TaskXml
-            TaskXml.make_xml('all')
+            TaskXml.make_xml('all', no_update=True)
             Task.upload()
         logger.info("EPG MAKER end..")
 
