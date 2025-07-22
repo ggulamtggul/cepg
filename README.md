@@ -1,4 +1,7 @@
 ## ChangeLog
+- 1.0.6 (2025.07.22)
+    - epg to cepg
+<br><br>
 - 1.0.5 (2025.07.08)
     - bug fix.
     - TODO: maker 네이버 추가 필요 (엣지온, 유로무비, 더라이프2)
