@@ -78,3 +78,26 @@ except Exception as e:
     P.logger.error(traceback.format_exc())
 
 logger = P.logger
+
+def reinit_db():
+    try:
+        P.logger.info("데이터베이스 연결을 다시 초기화합니다.")
+        if P.db is not None:
+            P.db.dispose() # 기존 연결 풀 폐기
+        
+        EPG_DATA_DB_PATH = os.path.join(os.path.dirname(__file__), 'files', f'{EPG_DATA_DB_BIND_KEY}.db')
+        F.app.config['SQLALCHEMY_BINDS'][EPG_DATA_DB_BIND_KEY] = f"sqlite:///{EPG_DATA_DB_PATH}?check_same_thread=False"
+        
+        P.db = create_engine(F.app.config['SQLALCHEMY_BINDS'][EPG_DATA_DB_BIND_KEY])
+        P.db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=P.db))
+        
+        with F.app.app_context():
+            F.db.engines[EPG_DATA_DB_BIND_KEY] = P.db
+        P.logger.info("데이터베이스 재연결 성공")
+        return True
+    except Exception as e:
+        P.logger.error(f'데이터베이스 재연결 실패: {str(e)}')
+        P.logger.error(traceback.format_exc())
+        return False
+
+P.reinit_db = reinit_db

@@ -1,3 +1,5 @@
+import os
+import shutil
 import urllib
 
 import requests
@@ -31,20 +33,59 @@ class Task(object):
         try:
             time1 = P.ModelSetting.get('epg_data_updated_time')
             time2 = Task.get_updated_time()
-            if time1 == None or time1 != time2:
-                data_db_file = os.path.join(os.path.dirname(__file__), 'files', 'epg_data.db')
-                if os.path.exists(data_db_file):
-                    os.remove(data_db_file)
-                
-                logger.info(f"{time1} {time2} epg_data.db 다운로드")
-                urllib.request.urlretrieve("https://github.com/flaskfarm/.epg.db/raw/main/epg_data.db", data_db_file) 
-                logger.info(f"{time1} {time2} epg_data.db 다운로드 완료")
-                P.ModelSetting.set('epg_data_updated_time', time2)
-            else:
+
+            if time1 is not None and time1 == time2:
                 logger.info(f"{time1} {time2} epg_data.db 다운로드 필요없음")
+                return
+
+            logger.info(f"{time1} {time2} epg_data.db 다운로드를 시작합니다.")
+            
+            base_dir = os.path.join(os.path.dirname(__file__), 'files')
+            db_path = os.path.join(base_dir, 'epg_data.db')
+            tmp_path = os.path.join(base_dir, 'epg_data.db.tmp')
+            bak_path = os.path.join(base_dir, 'epg_data.db.bak')
+
+            # 1. 임시 파일로 다운로드
+            url = "https://github.com/flaskfarm/.epg.db/raw/main/epg_data.db"
+            urllib.request.urlretrieve(url, tmp_path)
+            logger.info("새로운 DB 파일을 임시 경로에 다운로드했습니다.")
+
+            # 2. DB 연결 종료
+            if P.db_session is not None:
+                P.db_session.remove()
+                logger.info("DB 세션을 종료했습니다.")
+            if P.db is not None:
+                P.db.dispose()
+                logger.info("DB 엔진 연결을 해제했습니다.")
+
+            # 3. 파일 교체
+            if os.path.exists(db_path):
+                if os.path.exists(bak_path):
+                    os.remove(bak_path)
+                os.rename(db_path, bak_path)
+                logger.info(f"기존 DB 파일을 '{bak_path}'로 백업했습니다.")
+            
+            os.rename(tmp_path, db_path)
+            logger.info(f"새로운 DB 파일을 '{db_path}'로 교체했습니다.")
+
+            P.ModelSetting.set('epg_data_updated_time', time2)
+            logger.info("DB 업데이트 시간을 기록했습니다.")
+
         except Exception as e: 
-                logger.error(f'Exception:{str(e)}')
-                logger.error(traceback.format_exc())
+            logger.error(f'Exception:{str(e)}')
+            logger.error(traceback.format_exc())
+            # 오류 발생 시 백업 파일로 복구 시도
+            if os.path.exists(bak_path):
+                os.rename(bak_path, db_path)
+                logger.info("오류가 발생하여 백업 DB로 복구했습니다.")
+        finally:
+            # 4. DB 재연결 (성공하든 실패하든 항상 시도)
+            P.reinit_db()
+            if os.path.exists(bak_path):
+                try:
+                    os.remove(bak_path)
+                except Exception as e:
+                    logger.error(f"백업 파일 삭제 실패: {e}")
 
 
     @staticmethod
