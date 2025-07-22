@@ -22,9 +22,9 @@ class Task(object):
     @staticmethod 
     def get_output_filepath(plugin):
         if plugin == 'all':
-            filename = os.path.join(os.path.dirname(__file__), 'files', f'xmltv.xml')
+            filename = os.path.join(os.path.dirname(__file__), 'files', f'{P.package_name}_xmltv.xml')
         else:
-            filename = os.path.join(F.config['path_data'], 'xmltv', f'xmltv_{plugin}.xml')
+            filename = os.path.join(F.config['path_data'], 'xmltv', f'{P.package_name}_xmltv_{plugin}.xml')
         return filename
 
 
@@ -234,12 +234,10 @@ class Task(object):
        
         try:
             tree = ET.ElementTree(root)
-            if call_from == 'all':
-                filename = os.path.join(os.path.dirname(__file__), 'files', f'xmltv.xml')
-            else:
-                _ = os.path.join(F.config['path_data'], 'xmltv')
-                os.makedirs(_, exist_ok=True)
-                filename = os.path.join(_, f'xmltv_{call_from}.xml')
+            filename = Task.get_output_filepath(call_from)
+            if call_from != 'all':
+                os.makedirs(os.path.dirname(filename), exist_ok=True)
+
             if os.path.exists(filename):
                 os.remove(filename)
             tree.write(filename, pretty_print=True, xml_declaration=True, encoding="utf-8")

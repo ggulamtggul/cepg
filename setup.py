@@ -7,7 +7,7 @@ setting = {
     'home_module': None,
     'menu': {
         'uri': __package__,
-        'name': 'EPG',
+        'name': 'CEPG',
         'list': [
             {
                 'uri': 'xml',
@@ -18,7 +18,7 @@ setting = {
             },
             {
                 'uri': 'maker',
-                'name': '서버전용 - epg.db 생성',
+                'name': '서버전용 - cepg.db 생성',
                 'list': [
                     {'uri': 'setting', 'name': '설정'},
                 ]
@@ -39,7 +39,7 @@ setting = {
     },
     'default_route': 'normal',
 }
-EPG_DATA_DB_BIND_KEY = 'epg_data'
+CEPG_DATA_DB_BIND_KEY = 'cepg_data'
 
 from plugin import *
 
@@ -47,9 +47,9 @@ P = create_plugin_instance(setting)
 
 
 try:
-    EPG_DATA_DB_PATH = os.path.join(os.path.dirname(__file__), 'files', f'{EPG_DATA_DB_BIND_KEY}.db')
-    F.app.config['SQLALCHEMY_BINDS'][EPG_DATA_DB_BIND_KEY] = f"sqlite:///{EPG_DATA_DB_PATH}?check_same_thread=False"
-    P.ModelSettingDATA = get_model_setting(EPG_DATA_DB_BIND_KEY, P.logger)
+    CEPG_DATA_DB_PATH = os.path.join(os.path.dirname(__file__), 'files', f'{CEPG_DATA_DB_BIND_KEY}.db')
+    F.app.config['SQLALCHEMY_BINDS'][CEPG_DATA_DB_BIND_KEY] = f"sqlite:///{CEPG_DATA_DB_PATH}?check_same_thread=False"
+    P.ModelSettingDATA = get_model_setting(CEPG_DATA_DB_BIND_KEY, P.logger)
     from sqlalchemy import MetaData, create_engine
     from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -61,11 +61,11 @@ try:
     from .mod_xml import ModuleXml
     
     
-    P.db = create_engine(F.app.config['SQLALCHEMY_BINDS'][EPG_DATA_DB_BIND_KEY])
+    P.db = create_engine(F.app.config['SQLALCHEMY_BINDS'][CEPG_DATA_DB_BIND_KEY])
     metadata = MetaData()
     P.db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=P.db))
     with F.app.app_context():
-        F.db.engines[EPG_DATA_DB_BIND_KEY] = P.db
+        F.db.engines[CEPG_DATA_DB_BIND_KEY] = P.db
    
     if os.path.exists(os.path.join(os.path.dirname(__file__), 'files', 'credential.json')) == False:
         P.set_module_list([ModuleXml])
@@ -85,14 +85,14 @@ def reinit_db():
         if P.db is not None:
             P.db.dispose() # 기존 연결 풀 폐기
         
-        EPG_DATA_DB_PATH = os.path.join(os.path.dirname(__file__), 'files', f'{EPG_DATA_DB_BIND_KEY}.db')
-        F.app.config['SQLALCHEMY_BINDS'][EPG_DATA_DB_BIND_KEY] = f"sqlite:///{EPG_DATA_DB_PATH}?check_same_thread=False"
+        CEPG_DATA_DB_PATH = os.path.join(os.path.dirname(__file__), 'files', f'{CEPG_DATA_DB_BIND_KEY}.db')
+        F.app.config['SQLALCHEMY_BINDS'][CEPG_DATA_DB_BIND_KEY] = f"sqlite:///{CEPG_DATA_DB_PATH}?check_same_thread=False"
         
-        P.db = create_engine(F.app.config['SQLALCHEMY_BINDS'][EPG_DATA_DB_BIND_KEY])
+        P.db = create_engine(F.app.config['SQLALCHEMY_BINDS'][CEPG_DATA_DB_BIND_KEY])
         P.db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=P.db))
         
         with F.app.app_context():
-            F.db.engines[EPG_DATA_DB_BIND_KEY] = P.db
+            F.db.engines[CEPG_DATA_DB_BIND_KEY] = P.db
         P.logger.info("데이터베이스 재연결 성공")
         return True
     except Exception as e:
